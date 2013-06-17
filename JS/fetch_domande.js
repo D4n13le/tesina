@@ -2,21 +2,30 @@ function fetch_questions()
 {
   // costruzione elenco risposte attualmente selezionate
   var s = $('[data-side-effects=true]:checked,'
-           +'[data-side-effects=true] option:selected').map(function() {
-      return this.value? this.value : null;
-  }).get().join();
+           +'[data-side-effects=true] option:selected').map(function()
+           {
+              return this.value? this.value : null;
+           }).get().join();
 
   // esecuzione get
   $.get(
       'fetch_questions_list.php',
+
+      // seleziono parametri inviati con la richiesta get
       {q: s},
+
       // funzione di callback
-      function(data) {
+      function(data)
+      {
         // parse JSON dell'elenco delle domande da mostrare
         var questions_to_show = JSON.parse(data); 
         questions_to_show = $.map(questions_to_show,
                                   function(id) { return id.toString() });
-        $('.question').each(function() {
+
+        // per ciascuna domanda
+        $('.question').each(function()
+        {
+            // controllo se va mostrata e se è già visibile
             var to_show = $.inArray($(this).attr('data-question_id'),
                                     questions_to_show) >= 0;
             var visible = $(this).is(':visible');
@@ -36,9 +45,12 @@ function fetch_questions()
             }
           });
 
+        // caricamento delle domande da mostrare terminato
+        // reimposto il cursore allo stato di default
         $('body').css('cursor', 'auto');
       }
   );
 
+  // imposto il cursore come "in progress"
   $('body').css('cursor', 'progress');
 }

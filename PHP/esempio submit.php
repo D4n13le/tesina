@@ -1,33 +1,22 @@
 <?php
 	require_once('lib/common.php');
 
+	if(user_is_not_logged_in()) // utente non autenticato
+		header('location:login.php') || die(); 
 
-	if(user_is_not_logged_in())
-		header('location:login.php') || die(); //user not logged in
+	if(user_has_completed_the_survey()) // questionario già inviato
+		header('location:questions.php') || die(); 
 
-	if(user_has_completed_the_survey())
-		header('location:questions.php') || die(); //questionario già inviato
-
-	if(!isset($_POST))
+	if(!isset($_POST)) // nessuna risposta fornita
 		header('location:questions.php');
 
-	$id_user = get_user_id();
+	$id_user = get_user_id(); //ottengo codice utente
 
-	$answers_list = array();
-	foreach($_POST as $id_question => $id_answer)
-	{
-		if(is_array($id_answer))
-			foreach($id_answer as $id)
-				$answers_list[] = $id;
-		else
-			$answers_list[] = $id_answer;
-	}
+	// ...
+	// omessa costruzione $answers_list, contenente le risposte date
 
-	if(count($answers_list) == 0)
-		header('location:questions.php');
-
-	//filtering out invalid answers
-	$n = count($answers_list);
+	// filtraggio risposte invalide
+	$n = count($answers_list); 
 
 	$question_marks_string = build_question_marks_string($n);
 
@@ -41,6 +30,7 @@
 	$args = array_merge(array($query, $types), $answers_list, $answers_list);
 	$result = call_user_func_array('exec_query_many_results', $args);
 
+	// inizio inserimento
 	disable_autocommit();
 
 	$success = True;
@@ -58,7 +48,7 @@
 			$success = FALSE;
 	}
 
-	//user has completed the survey
+	// salvataggio completamento questionario
 	$query = 'UPDATE users
 			  SET completed=1
 			  WHERE id_user=?';
@@ -70,15 +60,19 @@
 	$newlocation = "";
 	if($success)
 	{
+		// nessun errore avvenuto, effettuo il commit
 		commit();
 		$newlocation = 'completed.php';
 	}
 	else
 	{
+		// si è verificato un errore, effettuo il rollback
 		rollback();	
 		$newlocation = 'questions.php';
 	}
 
-	enable_autocommit();
-	header("Location:$newlocation") || die();
+	
+	enable_autocommit(); // riabilito l'autocommit
+
+	header("Location:$newlocation") || die(); // effettuo redirect
 ?>
